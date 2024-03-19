@@ -47,20 +47,22 @@ let init global targ_func targ_line edge_set =
   { graph; target }
 
 let get_pathcounts dfg sink =
-  let rec explore graph worklist resmap =
-    if Queue.is_empty worklist then resmap
+  let rec explore graph snk resmap =
+    (* (pred, succ) *)
+    if BatMap.find snk resmap then resmap 
     else
-      let task = (Queue.pop worklist) in
-      let node = List.hd task in
-      if List.length (LineLevelG.pred graph node) = 0 then
-        let resmap' = List.fold_left (fun m v -> BatMap.add v (try BatMap.find v m with Not_found -> 0) + 1 m) resmap task in
-        explore graph worklist resmap'
-      else
-        let worklist' = LineLevelG.fold_pred (fun pred wl -> Queue.push ([pred] @ task) wl) graph node worklist in
-        explore graph worklist' resmap
+      let pc = BatList.fold_left (fun acc pred -> 
+          acc + (fst (BatMap.find pred (explore graph pred resmap)))
+        ) 0 (LineLevelG.pred graph snk) in
+      let pred_count = if pc = 0 then 1 else pc  in
+      let sc = BatList.fold_left (fun acc succ -> 
+        acc + (snd (BatMap.find succ (explore graph succ resmap)))
+      ) 0 (LineLevelG.succ graph snk) in
+      let succ_count = if sc = 0 then 1 else sc in
+      BatMap.add snk (pred_count, succ_count) resmap
   in
-  let worklist = Queue.add [sink] (Queue.create ()) in
-  explore dfg worklist BatMap.empty
+  explore dfg.graph sink BatMap.empty
+
 
 let rec list_max = function
   | [] -> failwith "empty list to list_max()"
@@ -71,17 +73,17 @@ let rec list_max = function
 
 let stringfy_nodes global dfg =
   let pids = InterCfg.pidsof global.icfg in
-  let pcs = get_pathcounts dfg dfg.target in
+  let pcm = get_pathcounts dfg.graph dfg.target in
   let folder v acc_entries =
     let func, line = v in
-    let pathcount = try BatMap.find v pcs with Not_found -> 0 in
+    let pred_count, succ_count = try BatMap.find v pcm with Not_found -> (0,0) in
     let dist = Dijkstra.shortest_path dfg.graph v dfg.target |> snd in
     if not (List.mem func pids) then acc_entries
-    else ((dist, pathcount), line) :: acc_entries
+    else (dist, (pred_count*succ_count, line)) :: acc_entries
   in
   let entries = LineLevelG.fold_vertex folder dfg.graph [] in
   let max_dist = List.map fst entries |> list_max in
-  let folder acc_strs ((dist, pathcount), line) =
+  let folder acc_strs (dist, (pathcount, line)) =
     SS.add (Printf.sprintf "%d %d %s" (max_dist - dist + 1) pathcount line) acc_strs
   in
   List.fold_left folder SS.empty entries
