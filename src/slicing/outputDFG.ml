@@ -49,7 +49,7 @@ let init global targ_func targ_line edge_set =
   { graph; target }
 
 let get_pathcounts dfg sink =
-  let rec get_entries graph target resset =
+  let get_entries graph target resset =
     LineLevelG.fold_vertex (fun v acc -> if LineLevelG.pred graph v = [] then BatSet.add v acc else acc) graph BatSet.empty
   in
   let rec succ_pathcounter graph worklist resmap =
@@ -65,7 +65,7 @@ let get_pathcounts dfg sink =
           let calculatable = BatList.fold (fun acc succ -> acc && BatMap.mem succ resmap) true (LineLevelG.succ graph target)  in
           if calculatable then
             let sc = BatList.fold (fun acc succ -> acc + BatMap.find succ resmap) 0 (LineLevelG.succ graph target)  in
-            succ_pathcounter graph tl (BatMap.add target succ_count resmap)
+            succ_pathcounter graph tl (BatMap.add target sc resmap)
           else
             succ_pathcounter graph ((LineLevelG.succ graph target) :: tl) resmap
   in
