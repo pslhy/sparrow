@@ -58,6 +58,7 @@ let get_pathcounts dfg sink =
     | target :: tl -> 
       if BatMap.mem target resmap then succ_pathcounter graph tl resmap
       else
+        let _ = Printf.printf "Succ Pathcounter :: Current %s, %d left \n" (snd target) (BatList.length tl) in 
         let succs = LineLevelG.succ graph target in
         if succs = [] then
           succ_pathcounter graph tl (BatMap.add target 1 resmap)
