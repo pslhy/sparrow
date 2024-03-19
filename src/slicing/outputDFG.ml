@@ -29,6 +29,8 @@ end
 
 module Dijkstra = Graph.Path.Dijkstra (LineLevelG) (W)
 
+module Bfs = Graph.Traverse.Bfs (LineLevelG)
+
 type t = { graph : LineLevelG.t; target : Line.t }
 
 let add_edge global graph src_node dst_node =
@@ -48,17 +50,24 @@ let init global targ_func targ_line edge_set =
 
 let get_pathcounts dfg sink =
   let rec get_entries graph target resset =
-    if (BatList.length (LineLevelG.pred graph target)) = 0 then BatSet.add target resset
-    else
-      BatList.fold (fun pred acc -> get_entries graph pred acc) (LineLevelG.pred graph target) resset
+    LineLevelG.fold_vertex (fun v acc -> if LineLevelG.pred graph v = [] then BatSet.add v acc else acc) graph BatSet.empty
   in
-  let rec succ_pathcounter graph target resmap =
-    if BatMap.mem target resmap then resmap
-    else
-      let newmap = BatList.fold (fun succ acc -> succ_pathcounter graph succ acc) (LineLevelG.succ graph target) resmap in
-      let sc = BatList.fold (fun succ acc -> acc + BatMap.find succ newmap) (LineLevelG.succ graph target) 0 in
-      let succ_count = if sc = 0 then 1 else sc in
-      BatMap.add target succ_count newmap
+  let rec succ_pathcounter graph worklist resmap =
+    match worklist with
+    | [] -> resmap 
+    | target :: tl -> 
+      if BatMap.mem target resmap then succ_pathcounter graph tl resmap
+      else
+        let succs = LineLevelG.succ graph target in
+        if succs = [] then
+          succ_pathcounter graph tl (BatMap.add target 1 resmap)
+        else
+          let calculatable = BatList.fold (fun succ acc -> acc && BatMap.mem succ resmap) (LineLevelG.succ graph target) true in
+          if calculatable then
+            let sc = BatList.fold (fun succ acc -> acc + BatMap.find succ resmap) (LineLevelG.succ graph target) 0 in
+            succ_pathcounter graph tl (BatMap.add target succ_count resmap)
+          else
+            succ_pathcounter graph ((LineLevelG.succ graph target) :: tl) resmap
   in
   let rec pred_pathcounter graph target resmap =
     if BatMap.mem target resmap then resmap
@@ -69,7 +78,7 @@ let get_pathcounts dfg sink =
       BatMap.add target pred_count newmap
   in
   let entries = get_entries dfg sink BatSet.empty in
-  let succ_pathcount = BatSet.fold (fun entry acc -> succ_pathcounter dfg entry acc) entries BatMap.empty in
+  let succ_pathcount = succ_pathcounter dfg [entries] BatMap.empty in
   let pred_pathcount = pred_pathcounter dfg sink BatMap.empty in
   BatMap.merge (fun _ a b -> match a, b with
       | Some x, Some y -> Some (x, y)
