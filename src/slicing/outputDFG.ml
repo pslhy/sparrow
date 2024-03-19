@@ -67,7 +67,7 @@ let get_pathcounts dfg sink =
             let sc = BatList.fold (fun acc succ -> acc + BatMap.find succ resmap) 0 (LineLevelG.succ graph target)  in
             succ_pathcounter graph tl (BatMap.add target sc resmap)
           else
-            succ_pathcounter graph ((LineLevelG.succ graph target) :: tl) resmap
+            succ_pathcounter graph ((LineLevelG.succ graph target) @ tl) resmap
   in
   let rec pred_pathcounter graph target resmap =
     if BatMap.mem target resmap then resmap
