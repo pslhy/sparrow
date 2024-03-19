@@ -49,8 +49,17 @@ let init global targ_func targ_line edge_set =
   { graph; target }
 
 let get_pathcounts dfg sink =
-  let get_entries graph target resset =
-    LineLevelG.fold_vertex (fun v acc -> if LineLevelG.pred graph v = [] then BatSet.add v acc else acc) graph BatSet.empty
+  let get_entries graph worklist resset visited =
+    match worklist with
+    | [] -> resset
+    | target :: tl ->
+      if BatSet.mem target visited then get_entries graph tl resset visited
+      else
+        let preds = LineLevelG.pred graph target in
+        if preds = [] then
+          get_entries graph tl (BatSet.add target resset) (BatSet.add target visited)
+        else
+          get_entries graph (preds @ tl) resset (BatSet.add target visited)
   in
   let rec succ_pathcounter graph worklist resmap =
     match worklist with
@@ -68,7 +77,7 @@ let get_pathcounts dfg sink =
             let sc = BatList.fold (fun acc succ -> acc + BatMap.find succ resmap) 0 (LineLevelG.succ graph target)  in
             succ_pathcounter graph tl (BatMap.add target sc resmap)
           else
-            succ_pathcounter graph ((LineLevelG.succ graph target) @ tl) resmap
+            succ_pathcounter graph ((LineLevelG.succ graph target) @ [target] @ tl) resmap
   in
   let rec pred_pathcounter graph target resmap =
     if BatMap.mem target resmap then resmap
@@ -78,7 +87,7 @@ let get_pathcounts dfg sink =
       let pred_count = if pc = 0 then 1 else pc in
       BatMap.add target pred_count newmap
   in
-  let entries = BatSet.to_list (get_entries dfg sink BatSet.empty) in
+  let entries = BatSet.to_list (get_entries dfg [sink] BatSet.empty BatSet.empty) in
   let succ_pathcount = succ_pathcounter dfg entries BatMap.empty in
   let pred_pathcount = pred_pathcounter dfg sink BatMap.empty in
   BatMap.merge (fun _ a b -> match a, b with
