@@ -51,12 +51,12 @@ let get_pathcounts dfg sink =
     if Queue.is_empty worklist then resmap
     else
       let task = (Queue.pop worklist) in
-      let node = List.tl task in
+      let node = List.hd task in
       if List.length (LineLevelG.pred graph node) = 0 then
         let resmap' = List.fold_left (fun m v -> BatMap.add v (try BatMap.find v m with Not_found -> 0) + 1 m) resmap task in
         explore graph worklist resmap'
       else
-        let worklist' = LineLevelG.fold_pred (fun pred wl -> Queue.push (task @ [pred]) wl) graph node worklist in
+        let worklist' = LineLevelG.fold_pred (fun pred wl -> Queue.push ([pred] @ task) wl) graph node worklist in
         explore graph worklist' resmap
   in
   let worklist = Queue.add [sink] (Queue.create ()) in
