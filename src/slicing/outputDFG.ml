@@ -78,7 +78,7 @@ let get_pathcounts dfg sink =
       BatMap.add target pred_count newmap
   in
   let entries = get_entries dfg sink BatSet.empty in
-  let succ_pathcount = succ_pathcounter dfg [entries] BatMap.empty in
+  let succ_pathcount = succ_pathcounter dfg entries BatMap.empty in
   let pred_pathcount = pred_pathcounter dfg sink BatMap.empty in
   BatMap.merge (fun _ a b -> match a, b with
       | Some x, Some y -> Some (x, y)
