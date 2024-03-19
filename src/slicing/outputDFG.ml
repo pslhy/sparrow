@@ -53,6 +53,7 @@ let get_pathcounts dfg sink =
     match worklist with
     | [] -> resset
     | target :: tl ->
+      let _ = Printf.printf "Get Entries :: Current %s, %d left \n" (snd target) (BatList.length tl) in 
       if BatSet.mem target visited then get_entries graph tl resset visited
       else
         let preds = LineLevelG.pred graph target in
