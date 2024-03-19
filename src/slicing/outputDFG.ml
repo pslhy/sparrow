@@ -47,31 +47,33 @@ let init global targ_func targ_line edge_set =
   { graph; target }
 
 let get_pathcounts dfg sink =
-  (* Get Entry and prec map *)
-  let prec_pathcount graph snk precmap entries = 
-    let pc = BatList.fold_left (fun acc pred -> 
-        acc + (BatMap.find pred (fst (prec_pathcount graph pred precmap entries)))
-      ) 0 (LineLevelG.pred graph snk) in
-    let pred_count = if pc = 0 then 1 else pc in
-    let ents = if pc = 0 then entries :: [snk] else entries in
-    (BatMap.add snk pred_count precmap, ents)
-  let succ_pathcount graph snk succmap = 
-    let sc = BatList.fold_left (fun acc succ -> 
-        acc + (BatMap.find succ (succ_pathcount graph succ succmap))
-      ) 0 (LineLevelG.succ graph snk) in
-    let succ_count = if sc = 0 then 1 else sc in
-    BatMap.add snk succ_count succmap
+  let rec get_entries graph target resset =
+    if (BatList.length (LineLevelG.pred graph target)) = 0 then BatSet.add target resset
+    else
+      BatList.fold (fun pred acc -> get_entries graph pred acc) (LineLevelG.pred graph target) resset
   in
-  let predmap, ents = prec_pathcount dfg sink BatMap.empty BatList.empty in
-  let succmap = BatList.fold (fun n m -> succ_pathcount dfg n m) ents BatMap.empty in
-  let resmap = BatMap.merge (fun _ a b -> match a, b with
-      | Some a, Some b -> Some (a, b)
-      | Some a, None -> Some (a, 0)
-      | None, Some b -> Some (0, b)
-      | None, None -> None
-    ) predmap succmap in
-  resmap
-
+  let rec succ_pathcounter graph target resmap =
+    if BatMap.mem target resmap then resmap
+    else
+      let newmap = BatList.fold (fun succ acc -> succ_pathcounter graph succ acc) (LineLevelG.succ graph target) resmap in
+      let sc = BatList.fold (fun succ acc -> acc + BatMap.find succ newmap) (LineLevelG.succ graph target) 0 in
+      let succ_count = if sc = 0 then 1 else sc in
+      BatMap.add target succ_count newmap
+  in
+  let rec pred_pathcounter graph target resmap =
+    if BatMap.mem target resmap then resmap
+    else
+      let newmap = BatList.fold (fun pred acc -> pred_pathcounter graph pred acc) (LineLevelG.pred graph target) resmap in
+      let pc = BatList.fold (fun pred acc -> acc + BatMap.find pred newmap) (LineLevelG.pred graph target) 0 in
+      let pred_count = if pc = 0 then 1 else pc in
+      BatMap.add target pred_count newmap
+  in
+  let entries = get_entries dfg sink BatSet.empty in
+  let succ_pathcount = BatSet.fold (fun entry acc -> succ_pathcounter dfg entry acc) entries BatMap.empty in
+  let pred_pathcount = pred_pathcounter dfg sink BatMap.empty in
+  BatMap.merge (fun _ a b -> match a, b with
+      | Some x, Some y -> Some (x, y)
+      | _ -> None) pred_pathcount succ_pathcount
 
 let rec list_max = function
   | [] -> failwith "empty list to list_max()"
