@@ -49,7 +49,7 @@ let init global targ_func targ_line edge_set =
   { graph; target }
 
 let get_pathcounts dfg sink =
-  let get_entries graph worklist resset visited =
+  let rec get_entries graph worklist resset visited =
     match worklist with
     | [] -> resset
     | target :: tl ->
