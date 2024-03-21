@@ -62,17 +62,16 @@ let get_pathcounts dfg sink =
         else
           get_entries graph (preds @ tl) resset (BatSet.add target visited)
   in
-  let rec pathcounter graph worklist incalculation resmap direction =
-    let prefix = if direction = LineLevelG.succ then "Succ" else "Pred" in
+  let rec pathcounter graph worklist incalculation resmap direction prefix =
     match worklist with
     | [] -> resmap 
     | target :: tl -> 
-      if BatMap.mem target resmap then pathcounter graph tl (BatSet.remove target incalculation) resmap direction
+      if BatMap.mem target resmap then pathcounter graph tl (BatSet.remove target incalculation) resmap direction prefix
       else
         let _ = Printf.printf "%s Pathcounter :: Current %s, %d left \n" prefix (snd target) (BatList.length tl) in 
         let succs = direction graph target in
         if BatList.is_empty succs then
-          pathcounter graph tl (BatSet.remove target incalculation) (BatMap.add target 1 resmap) direction
+          pathcounter graph tl (BatSet.remove target incalculation) (BatMap.add target 1 resmap) direction prefix
         else
           let succs = BatSet.of_list (direction graph target) in
           let cal_succs = BatSet.elements (BatSet.diff succs incalculation) in
@@ -80,13 +79,13 @@ let get_pathcounts dfg sink =
           if calculatable then
             let sc = BatList.fold (fun acc succ -> acc + BatMap.find succ resmap) 0 cal_succs  in
             let _ = Printf.printf "%s Pathcounter :: Calculatable %s, Value %d \n" prefix (snd target) sc in 
-            pathcounter graph tl (BatSet.remove target incalculation) (BatMap.add target sc resmap) direction
+            pathcounter graph tl (BatSet.remove target incalculation) (BatMap.add target sc resmap) direction prefix
           else
-            pathcounter graph (cal_succs @ [target] @ tl) (BatSet.add target incalculation) resmap direction
+            pathcounter graph (cal_succs @ [target] @ tl) (BatSet.add target incalculation) resmap direction prefix
   in
   let entries = BatSet.to_list (get_entries dfg [sink] BatSet.empty BatSet.empty) in
-  let succ_pathcount = pathcounter dfg entries BatSet.empty BatMap.empty LineLevelG.succ in
-  let pred_pathcount = pathcounter dfg [sink] BatSet.empty BatMap.empty LineLevelG.pred in
+  let succ_pathcount = pathcounter dfg entries BatSet.empty BatMap.empty LineLevelG.succ "Succ" in
+  let pred_pathcount = pathcounter dfg [sink] BatSet.empty BatMap.empty LineLevelG.pred "Pred" in
   BatMap.merge (fun _ a b -> match a, b with
       | Some x, Some y -> Some (x, y)
       | _ -> None) pred_pathcount succ_pathcount
