@@ -80,7 +80,7 @@ let get_pathcounts dfg sink =
           let calculatable = BatList.fold (fun acc succ -> acc && BatMap.mem succ resmap) true cal_succs  in
           if calculatable then
             let scc = BatList.fold (fun acc succ -> Uint128.add acc (BatMap.find succ resmap)) Uint128.zero cal_succs  in
-            let sc = if scc = 0 then Uint128.one else scc in
+            let sc = if scc = Uint128.zero then Uint128.one else scc in
             let _ = Printf.printf "%s Pathcounter :: Calculatable %s, Value %s, %s %d, %s \n" 
               prefix (snd target) (Uint128.to_string sc) prefix (BatList.length cal_succs) 
               (BatList.fold (fun acc succ -> acc ^ "+" ^ (Uint128.to_string (BatMap.find succ resmap))) "" cal_succs) 
