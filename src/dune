@@ -17,6 +17,7 @@
   lymp
   ocamlgraph
   str
+  stdint
   yojson)
  (preprocess
   (pps ppx_compare)))

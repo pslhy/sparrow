@@ -33,4 +33,5 @@ depends: [
   "claml"
   "linenoise"
   "memtrace"
+  "stdint"
 ]

@@ -29,6 +29,8 @@ end
 
 module Dijkstra = Graph.Path.Dijkstra (LineLevelG) (W)
 
+module Uint128 = Stdint.Uint128
+
 module Bfs = Graph.Traverse.Bfs (LineLevelG)
 
 type t = { graph : LineLevelG.t; target : Line.t }
@@ -72,15 +74,16 @@ let get_pathcounts dfg sink =
         let _ = Printf.printf "%s Pathcounter :: Current %s, %d left \n" prefix (snd target) (BatList.length tl) in 
         let succs = direction graph target in
         let cal_succs = BatSet.elements (BatSet.diff (BatSet.of_list succs) incalculation) in
-        if BatList.is_empty cal_succs then
-          pathcounter graph tl (BatSet.remove target incalculation) (BatMap.add target 1L resmap) direction prefix
+        if BatList.is_empty succs then
+          pathcounter graph tl (BatSet.remove target incalculation) (BatMap.add target Uint128.one resmap) direction prefix
         else
           let calculatable = BatList.fold (fun acc succ -> acc && BatMap.mem succ resmap) true cal_succs  in
           if calculatable then
-            let sc = BatList.fold (fun acc succ -> Int64.add acc (BatMap.find succ resmap)) 0L cal_succs  in
+            let scc = BatList.fold (fun acc succ -> Uint128.add acc (BatMap.find succ resmap)) Uint128.zero cal_succs  in
+            let sc = if scc = 0 then Uint128.one else scc in
             let _ = Printf.printf "%s Pathcounter :: Calculatable %s, Value %s, %s %d, %s \n" 
-              prefix (snd target) (Int64.to_string sc) prefix (BatList.length cal_succs) 
-              (BatList.fold (fun acc succ -> acc ^ "+" ^ (Int64.to_string (BatMap.find succ resmap))) "" cal_succs) 
+              prefix (snd target) (Uint128.to_string sc) prefix (BatList.length cal_succs) 
+              (BatList.fold (fun acc succ -> acc ^ "+" ^ (Uint128.to_string (BatMap.find succ resmap))) "" cal_succs) 
             in 
             pathcounter graph tl (BatSet.remove target incalculation) (BatMap.add target sc resmap) direction prefix
           else
@@ -108,11 +111,11 @@ let stringfy_nodes global dfg =
     let pred_count, succ_count = try BatMap.find v pcm with Not_found -> (0L,0L) in
     let dist = Dijkstra.shortest_path dfg.graph v dfg.target |> snd in
     if not (List.mem func pids) then acc_entries
-    else (dist, ((Int64.mul pred_count succ_count), line)) :: acc_entries
+    else (dist, ((Uint128.mul pred_count succ_count), line)) :: acc_entries
   in
   let entries = LineLevelG.fold_vertex folder dfg.graph [] in
   let max_dist = List.map fst entries |> list_max in
   let folder acc_strs (dist, (pathcount, line)) =
-    SS.add (Printf.sprintf "%d %s %s" (max_dist - dist + 1) (Int64.to_string pathcount) line) acc_strs
+    SS.add (Printf.sprintf "%d %s %s" (max_dist - dist + 1) (Uint128.to_string pathcount) line) acc_strs
   in
   List.fold_left folder SS.empty entries
