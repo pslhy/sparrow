@@ -76,7 +76,7 @@ let get_pathcounts dfg sink =
         else
           let calculatable = BatList.fold (fun acc succ -> acc && BatMap.mem succ resmap) true cal_succs  in
           if calculatable then
-            let sc = BatList.fold (fun acc succ -> Int64.add acc BatMap.find succ resmap) 0L cal_succs  in
+            let sc = BatList.fold (fun acc succ -> Int64.add acc (BatMap.find succ resmap)) 0L cal_succs  in
             let _ = Printf.printf "%s Pathcounter :: Calculatable %s, Value %d \n" prefix (snd target) sc in 
             pathcounter graph tl (BatSet.remove target incalculation) (BatMap.add target sc resmap) direction prefix
           else
@@ -104,7 +104,7 @@ let stringfy_nodes global dfg =
     let pred_count, succ_count = try BatMap.find v pcm with Not_found -> (0,0) in
     let dist = Dijkstra.shortest_path dfg.graph v dfg.target |> snd in
     if not (List.mem func pids) then acc_entries
-    else (dist, (Int64.mul pred_count succ_count, line)) :: acc_entries
+    else (dist, ((Int64.mul pred_count succ_count), line)) :: acc_entries
   in
   let entries = LineLevelG.fold_vertex folder dfg.graph [] in
   let max_dist = List.map fst entries |> list_max in
