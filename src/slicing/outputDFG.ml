@@ -108,7 +108,7 @@ let stringfy_nodes global dfg =
   let pcm = get_pathcounts dfg.graph dfg.target in
   let folder v acc_entries =
     let func, line = v in
-    let pred_count, succ_count = try BatMap.find v pcm with Not_found -> (0L,0L) in
+    let pred_count, succ_count = try BatMap.find v pcm with Not_found -> (Uint128.zero,Uint128.zero) in
     let dist = Dijkstra.shortest_path dfg.graph v dfg.target |> snd in
     if not (List.mem func pids) then acc_entries
     else (dist, ((Uint128.mul pred_count succ_count), line)) :: acc_entries
