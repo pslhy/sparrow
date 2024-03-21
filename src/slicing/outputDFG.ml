@@ -80,7 +80,7 @@ let get_pathcounts dfg sink =
             let sc = BatList.fold (fun acc succ -> acc + BatMap.find succ resmap) 0 cal_succs  in
             pathcounter graph tl (BatSet.remove target incalculation) (BatMap.add target sc resmap) direction
           else
-            pathcounter graph (cal_succs @ [target] @ tl) resmap direction
+            pathcounter graph (cal_succs @ [target] @ tl) incalculation resmap direction
   in
   let entries = BatSet.to_list (get_entries dfg [sink] BatSet.empty BatSet.empty) in
   let succ_pathcount = pathcounter dfg entries BatSet.empty BatMap.empty LineLevelG.succ in
