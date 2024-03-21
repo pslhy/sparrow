@@ -71,7 +71,7 @@ let get_pathcounts dfg sink =
       else
         let _ = Printf.printf "%s Pathcounter :: Current %s, %d left \n" prefix (snd target) (BatList.length tl) in 
         let succs = direction graph target in
-        if BatList.empty succs then
+        if BatList.is_empty succs then
           pathcounter graph tl (BatSet.remove target incalculation) (BatMap.add target 1 resmap) direction
         else
           let succs = BatSet.of_list (direction graph target) in
