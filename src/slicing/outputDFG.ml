@@ -79,7 +79,7 @@ let get_pathcounts dfg sink =
             let sc = BatList.fold (fun acc succ -> Int64.add acc (BatMap.find succ resmap)) 0L cal_succs  in
             let _ = Printf.printf "%s Pathcounter :: Calculatable %s, Value %s, %s %d, %s \n" 
               prefix (snd target) (Int64.to_string sc) prefix (BatList.length cal_succs) 
-              (BatList.fold (fun acc succ -> acc ^ "+" ^ (Int64.to_string (BatMap.find succ resmap)) "" cal_succs)) 
+              (BatList.fold (fun acc succ -> acc ^ "+" ^ (Int64.to_string (BatMap.find succ resmap))) "" cal_succs) 
             in 
             pathcounter graph tl (BatSet.remove target incalculation) (BatMap.add target sc resmap) direction prefix
           else
