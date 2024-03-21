@@ -77,7 +77,7 @@ let get_pathcounts dfg sink =
           let calculatable = BatList.fold (fun acc succ -> acc && BatMap.mem succ resmap) true cal_succs  in
           if calculatable then
             let sc = BatList.fold (fun acc succ -> Int64.add acc (BatMap.find succ resmap)) 0L cal_succs  in
-            let _ = Printf.printf "%s Pathcounter :: Calculatable %s, Value %d \n" prefix (snd target) sc in 
+            let _ = Printf.printf "%s Pathcounter :: Calculatable %s, Value %s \n" prefix (snd target) (Int64.to_string sc) in 
             pathcounter graph tl (BatSet.remove target incalculation) (BatMap.add target sc resmap) direction prefix
           else
             pathcounter graph (cal_succs @ [target] @ tl) (BatSet.add target incalculation) resmap direction prefix
@@ -109,6 +109,6 @@ let stringfy_nodes global dfg =
   let entries = LineLevelG.fold_vertex folder dfg.graph [] in
   let max_dist = List.map fst entries |> list_max in
   let folder acc_strs (dist, (pathcount, line)) =
-    SS.add (Printf.sprintf "%d %d %s" (max_dist - dist + 1) pathcount line) acc_strs
+    SS.add (Printf.sprintf "%d %s %s" (max_dist - dist + 1) (Int64.to_string pathcount) line) acc_strs
   in
   List.fold_left folder SS.empty entries
