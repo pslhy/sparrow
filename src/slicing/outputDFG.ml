@@ -63,7 +63,7 @@ let get_pathcounts dfg sink =
           let preds = LineLevelG.pred graph target in
           if  BatList.is_empty preds then
             let _ = Printf.printf "Get Entries :: Found Entry %s \n" (snd target) in
-            get_entries graph tl dist (BatSet.add target resset) (BatSet.add target visited)
+            get_entries graph tl (BatSet.add target resset) (BatSet.add target visited)
           else
             let pds = BatList.map (fun x -> (x, dist-1)) preds in
             get_entries graph (pds @ tl) resset (BatSet.add target visited)
