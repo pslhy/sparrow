@@ -281,6 +281,7 @@ let perform_slicing global dug (targ_id, targ_line) =
   let line_dfg = OutputDFG.init global targ_func targ_line edges in
   let t3 = Sys.time () in
   let dfg_nodes = OutputDFG.stringfy_nodes global line_dfg in
+  let dfg_dots = OutputDFG.to_dot global line_dfg in
   let t4 = Sys.time () in
   L.info ~to_consol:true "Slicing for %s finished: %f sec\n" targ_id (t4 -. t0);
   L.info ~to_consol:true "DUG traversal time: %f sec\n" (t1 -. t0);
@@ -300,6 +301,7 @@ let perform_slicing global dug (targ_id, targ_line) =
   print_to_file targ_id "slice_graph.dot" (SS.add (DUGraph.to_dot dug) SS.empty);
   print_to_file targ_id "slice_line.txt" lines;
   print_to_file targ_id "slice_func.txt" funcs;
+  print_to_file targ_id "slice_dfg.dot" dfg_dots;
   print_to_file targ_id "slice_dfg.txt" dfg_nodes
   (* print_to_file targ_id "slice_control_dep_line.txt" control_dep_lines *)
 

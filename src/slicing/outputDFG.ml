@@ -111,6 +111,27 @@ let rec list_max = function
       let tail_max = list_max tail in
       if head > tail_max then head else tail_max
 
+    (* (fun src dst str ->
+          let addrset = get_abslocs src dst dug in
+          str ^ "\""
+          ^ BasicDom.Node.to_string src
+          ^ "\"" ^ " -> " ^ "\""
+          ^ BasicDom.Node.to_string dst
+          ^ "\"" ^ "[label=\"{"
+          ^ PowLoc.fold (fun addr s -> Loc.to_string addr ^ "," ^ s) addrset ""
+          ^ "}\"]" ^ ";\n") *)
+
+let to_dot global dfg = 
+  let pids = InterCfg.pidsof global.icfg in
+  "digraph dugraph {\n"
+  ^ LineLevelG.fold_edges (fun src dst acc_str ->
+      let src_func, src_line = src in
+      let dst_func, dst_line = dst in
+      if not (List.mem src_func pids) || not (List.mem dst_func pids) then acc_str
+      else
+        acc_str ^ Printf.sprintf "\"%s:%s\" -> \"%s:%s\";\n" src_func src_line dst_func dst_line
+    ) dfg.graph ""
+
 let stringfy_nodes global dfg =
   let pids = InterCfg.pidsof global.icfg in
   let pcm = get_pathcounts dfg.graph dfg.target in
