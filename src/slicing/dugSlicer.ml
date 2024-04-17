@@ -247,6 +247,10 @@ let rec slice_control_deps global workset slice =
     let slice = NodeSet.union slice control_dep_nodes in
     slice_control_deps global workset slice
 
+let str_sliced_nodes global nodes =
+  let folder n acc = SS.add (node_to_lstr_verbose global n) acc in
+  NodeSet.fold folder nodes SS.empty
+
 let perform_slicing global dug (targ_id, targ_line) =
   Printf.printf "Slicing for target '%s' begins\n%!" targ_id;
   Hashtbl.reset memoize;
@@ -292,6 +296,7 @@ let perform_slicing global dug (targ_id, targ_line) =
   (* L.info ~to_consol:true " - # Sliced control-dependent lines : %d\n" (SS.cardinal control_dep_lines); *)
   L.info ~to_consol:true " - # Sliced functions : %d\n" (SS.cardinal funcs);
   L.info ~to_consol:true " - # Output DFG nodes : %d\n" (SS.cardinal dfg_nodes);
+  print_to_file targ_id "slice_nodes.txt" (str_sliced_nodes global nodes);
   print_to_file targ_id "slice_graph.dot" (SS.add (DUGraph.to_dot dug) SS.empty);
   print_to_file targ_id "slice_line.txt" lines;
   print_to_file targ_id "slice_func.txt" funcs;
