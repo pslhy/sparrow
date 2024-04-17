@@ -214,6 +214,7 @@ let print_to_file targ_id filename str_set =
   SS.iter (fun str -> output_string oc (str ^ "\n")) str_set;
   close_out oc
 
+
 let dump_funcs global =
   let oc = open_out (Filename.concat !Options.outdir "func.txt") in
   let nodes = InterCfg.nodesof global.icfg in
@@ -291,10 +292,10 @@ let perform_slicing global dug (targ_id, targ_line) =
   (* L.info ~to_consol:true " - # Sliced control-dependent lines : %d\n" (SS.cardinal control_dep_lines); *)
   L.info ~to_consol:true " - # Sliced functions : %d\n" (SS.cardinal funcs);
   L.info ~to_consol:true " - # Output DFG nodes : %d\n" (SS.cardinal dfg_nodes);
-  print_to_file targ_id "slice_graph.dot" (DUGraph.to_dot dug);
+  print_to_file targ_id "slice_graph.dot" (DUGraph.to_dot dug)
   print_to_file targ_id "slice_line.txt" lines;
   print_to_file targ_id "slice_func.txt" funcs;
-  print_to_file targ_id "slice_dfg.txt" dfg_nodes
+  print_to_file targ_id "slice_dfg.txt" (SS.add dfg_nodes SS.empty);
   (* print_to_file targ_id "slice_control_dep_line.txt" control_dep_lines *)
 
 let run global =
