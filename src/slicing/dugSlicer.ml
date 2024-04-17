@@ -298,7 +298,7 @@ let perform_slicing global dug (targ_id, targ_line) =
   L.info ~to_consol:true " - # Sliced functions : %d\n" (SS.cardinal funcs);
   L.info ~to_consol:true " - # Output DFG nodes : %d\n" (SS.cardinal dfg_nodes);
   print_to_file targ_id "slice_nodes.txt" (str_sliced_nodes global nodes);
-  print_to_file targ_id "slice_graph.dot" (SS.add (DUGraph.to_dot dug) SS.empty);
+  (* print_to_file targ_id "slice_graph.dot" (SS.add (DUGraph.to_dot dug) SS.empty); *)
   print_to_file targ_id "slice_line.txt" lines;
   print_to_file targ_id "slice_func.txt" funcs;
   print_to_file targ_id "slice_dfg.dot" (SS.add (dfg_dots) SS.empty);
