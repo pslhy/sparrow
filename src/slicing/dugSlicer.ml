@@ -295,7 +295,7 @@ let perform_slicing global dug (targ_id, targ_line) =
   print_to_file targ_id "slice_graph.dot" (DUGraph.to_dot dug)
   print_to_file targ_id "slice_line.txt" lines;
   print_to_file targ_id "slice_func.txt" funcs;
-  print_to_file targ_id "slice_dfg.txt" (SS.add dfg_nodes SS.empty);
+  print_to_file targ_id "slice_dfg.txt" (SS.add dfg_nodes SS.empty)
   (* print_to_file targ_id "slice_control_dep_line.txt" control_dep_lines *)
 
 let run global =
